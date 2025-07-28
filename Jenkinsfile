@@ -2,41 +2,24 @@
     agent any
 
     tools {
-        dotnet 'dotnet-9' // This must match the name you gave in Jenkins
+        dotnetsdk 'dotnet9' // Must match the name in Jenkins Global Tool Configuration
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                git 'https://github.com/Tejaswini1128/EmployeeRepo.git'
-            }
-        }
-
         stage('Restore') {
             steps {
                 bat 'dotnet restore'
             }
         }
-
         stage('Build') {
             steps {
-                bat 'dotnet build --configuration Release'
+                bat 'dotnet build --no-restore'
             }
         }
-
-        stage('Run') {
+        stage('Test') {
             steps {
-                bat 'dotnet run'
+                bat 'dotnet test --no-build --verbosity normal'
             }
-        }
-    }
-
-    post {
-        success {
-            echo '✅ Build and run successful!'
-        }
-        failure {
-            echo '❌ Build or run failed. Check logs.'
         }
     }
 }
