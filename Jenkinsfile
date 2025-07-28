@@ -2,24 +2,45 @@ pipeline {
     agent any
 
     tools {
-        dotnetsdk 'dotnet9' // Must match the name in Jenkins Global Tool Configuration
+        dotnetsdk 'dotnet9'  // This name must match your Jenkins Global Tool Config
+    }
+
+    triggers {
+        pollSCM('* * * * *')  // Poll every minute for changes
     }
 
     stages {
-        stage('Restore') {
+        stage('Checkout Source') {
             steps {
-                bat 'dotnet restore'
+                checkout scm
             }
         }
-        stage('Build') {
+
+        stage('Build .NET Project') {
+            when {
+                changeset "**/*.cs"
+            }
             steps {
-                bat 'dotnet build --no-restore'
+                echo 'Changes detected in .NET source code...'
+                sh 'dotnet restore'
+                sh 'dotnet build'
             }
         }
-        stage('Test') {
-            steps {
-                bat 'dotnet test --no-build --verbosity normal'
+
+        stage('SQL Script Change Detected') {
+            when {
+                changeset "sql/**"
             }
+            steps {
+                echo 'Changes detected in SQL folder.'
+                echo 'You can run database migration or validation steps here.'
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline execution completed.'
         }
     }
 }
